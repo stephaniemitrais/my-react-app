@@ -8,9 +8,13 @@ const ContactList = () => {
   const [editContact, setEditContact] = useState(null);
   const [updatedContact, setUpdatedContact] = useState({ name: "", email: "", phone: "" });
 
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    axios.get("http://localhost:8080/contacts")
+    axios
+      .get("http://localhost:8080/contacts", {
+        headers: { Authorization: `Bearer ${token}` }, 
+      })
       .then((response) => {
         setContacts(response.data);
         setLoading(false);
@@ -23,7 +27,10 @@ const ContactList = () => {
 
 
   const handleDelete = (id) => {
-    axios.delete(`http://localhost:8080/contacts/${id}`)
+    axios
+      .delete(`http://localhost:8080/contacts/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then(() => {
         setContacts(contacts.filter(contact => contact.id !== id));
       })
@@ -33,19 +40,31 @@ const ContactList = () => {
 
   const handleEdit = (contact) => {
     setEditContact(contact.id);
-    setUpdatedContact(contact);
+    setUpdatedContact({ ...contact });
   };
-
 
   const handleUpdate = (e) => {
     e.preventDefault();
-    axios.put(`http://localhost:8080/contacts/${editContact}`, updatedContact) // Update by ObjectId
-      .then(() => {
-        setContacts(contacts.map(contact => contact.id === editContact ? updatedContact : contact));
+    const contactData = {
+        name: updatedContact.name,
+        email: updatedContact.email,
+        phone: updatedContact.phone
+    };
+
+    axios.put(`http://localhost:8080/contacts/${editContact}`, contactData, {
+        headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    })
+    .then(() => {
+        setContacts(contacts.map(contact => 
+            contact.id === editContact ? { ...contact, ...contactData } : contact
+        ));
         setEditContact(null);
-      })
-      .catch(error => console.error("Error updating contact:", error));
-  };
+    })
+    .catch(error => console.error("Error updating contact:", error));
+};
 
   if (loading) return <p>Loading contacts...</p>;
 

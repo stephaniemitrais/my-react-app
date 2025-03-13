@@ -1,29 +1,27 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Route, Switch, Link } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import AddContact from "./components/AddContact";
+import Register from "./pages/Register";
+import PrivateRoute from "./PrivateRoute";
 
-function App() {
-  const [username, setUsername] = useState("");
+const App = () => {
+  const token = localStorage.getItem("token");
+  const username = localStorage.getItem("username");
 
   return (
-    <Router>
-      <div> 
-        <Switch>
-          <Route exact path="/">
-            <Login setUsername={setUsername} />
-          </Route>
-          <Route path="/dashboard">
-            <Dashboard username={username} />
-          </Route>
-          <Route path="/add-contact">
-            <AddContact />
-          </Route>
-        </Switch>
-      </div>
-    </Router>
+      <Router>
+          <Switch>
+              <Route exact path="/">
+                  {token ? <Redirect to="/dashboard" /> : <Login />}
+              </Route>
+              <Route path="/register" component={Register} />
+              <PrivateRoute path="/dashboard" component={() => <Dashboard username={username} />} />
+
+              <Redirect to="/" />
+          </Switch>
+      </Router>
   );
-}
+};
 
 export default App;
