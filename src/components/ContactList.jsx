@@ -1,42 +1,22 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchContacts, deleteContact, updateContact } from "../redux/contactSlice"; 
 import "./ContactList.css";
 
 const ContactList = () => {
-  const [contacts, setContacts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { contacts, loading, error } = useSelector((state) => state.contacts);
+  
   const [editContact, setEditContact] = useState(null);
   const [updatedContact, setUpdatedContact] = useState({ name: "", email: "", phone: "" });
 
-  const token = localStorage.getItem("token");
-
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/contacts", {
-        headers: { Authorization: `Bearer ${token}` }, 
-      })
-      .then((response) => {
-        setContacts(response.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching contacts:", error);
-        setLoading(false);
-      });
-  }, []);
-
+    dispatch(fetchContacts()); // Fetch contacts when component mounts
+  }, [dispatch]);
 
   const handleDelete = (id) => {
-    axios
-      .delete(`http://localhost:8080/contacts/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then(() => {
-        setContacts(contacts.filter(contact => contact.id !== id));
-      })
-      .catch(error => console.error("Error deleting contact:", error));
+    dispatch(deleteContact(id));
   };
-
 
   const handleEdit = (contact) => {
     setEditContact(contact.id);
@@ -46,27 +26,17 @@ const ContactList = () => {
   const handleUpdate = (e) => {
     e.preventDefault();
     const contactData = {
-        name: updatedContact.name,
-        email: updatedContact.email,
-        phone: updatedContact.phone
+      name: updatedContact.name,
+      email: updatedContact.email,
+      phone: updatedContact.phone
     };
 
-    axios.put(`http://localhost:8080/contacts/${editContact}`, contactData, {
-        headers: { 
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-        }
-    })
-    .then(() => {
-        setContacts(contacts.map(contact => 
-            contact.id === editContact ? { ...contact, ...contactData } : contact
-        ));
-        setEditContact(null);
-    })
-    .catch(error => console.error("Error updating contact:", error));
-};
+    dispatch(updateContact({ id: editContact, contactData: contactData }));
+    setEditContact(null);
+  };
 
   if (loading) return <p>Loading contacts...</p>;
+  if (error) return <p>Error loading contacts: {error}</p>;
 
   return (
     <div className="contact-container">

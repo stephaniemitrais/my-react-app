@@ -18,7 +18,6 @@ const App = () => {
               <Route path="/register" component={Register} />
               <PrivateRoute path="/dashboard" component={() => <Dashboard username={username} />} />
 
-              <Redirect to="/" />
           </Switch>
       </Router>
   );
